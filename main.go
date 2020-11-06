@@ -19,7 +19,7 @@ type Artist struct {
 	name string
 }
 
-func Init() {
+func init() {
 	var err error
 
 	connStr := fmt.Sprintf("host=35.236.63.213 user=public-user password=lakerswin2020 dbname=music_catalog sslmode=disable")
@@ -57,8 +57,6 @@ func ArtistsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
-	Init()
 
 	defer func() {
 		_ = db.Close()
