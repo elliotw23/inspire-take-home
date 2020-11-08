@@ -8,3 +8,5 @@
 # Possible updates
 # Create playlist
 # Update and delete entries
+
+# Postmain collection: https://www.getpostman.com/collections/f0d33bf3bc5f2a3d0bc5

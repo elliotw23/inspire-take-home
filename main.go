@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,14 +15,10 @@ var (
 	db *sql.DB
 )
 
-type Artist struct {
-	id   int
-	name string
-}
-
 func init() {
 	var err error
 
+	// Connect to music_catalog postgresql database
 	connStr := fmt.Sprintf("host=35.236.63.213 user=public-user password=lakerswin2020 dbname=music_catalog sslmode=disable")
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
@@ -33,27 +30,18 @@ func init() {
 	}
 }
 
-func ArtistsHandler(w http.ResponseWriter, r *http.Request) {
-	//vars := mux.Vars(r)
-	//
-	//println(vars)
+func writeResponse(resp interface{}, w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
 
-	rows, err := db.Query("SELECT id, name FROM artists")
-	if err != nil {
-		log.Fatal(err)
-	}
+	encoder := json.NewEncoder(w)
 
-	defer func() {
-		_ = rows.Close()
-	}()
+	_ = encoder.Encode(resp)
+}
 
-	for rows.Next() {
-		var artist Artist
-		if err := rows.Scan(&artist.id, &artist.name); err != nil {
-			log.Fatal(err)
-		}
-		_, _ = w.Write([]byte(fmt.Sprintf("ID: %d --- Name: %s\n", artist.id, artist.name)))
-	}
+func writeError(err error, w http.ResponseWriter) {
+	log.Printf("Error occurred: %s", err)
+	// TODO don't directly return db error to client
+	http.Error(w, err.Error(), 400)
 }
 
 func main() {
@@ -64,6 +52,17 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/artists", ArtistsHandler)
+	// TODO use auto-generated api schema framework like protobuf
+	r.HandleFunc("/artists", GetArtistsHandler).Methods("GET").Queries(
+		"id", "{id:[0-9]+}", "name", "{name}")
+	r.HandleFunc("/artists", PostArtistHandler).Methods("POST").Queries(
+		"name", "{name}")
+	r.HandleFunc("/albums", GetAlbumsHandler).Methods("GET").Queries(
+		"id", "{id:[0-9]+}", "artist_id", "{artist_id:[0-9]+}", "artist_name", "{artist_name}", "title", "{title}",
+		"order", "{order}")
+	r.HandleFunc("/albums", PostAlbumHandler).Methods("POST").Queries(
+		"artist_id", "{artist_id:[0-9]+}", "title", "{title}", "year", "{year:[0-9]+}",
+		"record_condition", "{record_condition}", "thumbnail", "{thumbnail}",
+	)
 	log.Fatal(http.ListenAndServe("localhost:8080", r))
 }
