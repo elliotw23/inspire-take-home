@@ -64,5 +64,6 @@ func main() {
 		"artist_id", "{artist_id:[0-9]+}", "title", "{title}", "year", "{year:[0-9]+}",
 		"record_condition", "{record_condition}", "thumbnail", "{thumbnail}",
 	)
+	log.Println("Starting Server on port 8080")
 	log.Fatal(http.ListenAndServe("localhost:8080", r))
 }
